@@ -6,11 +6,10 @@ import "./interfaces/IrERC20.sol";
 import "./interfaces/IRandomCodex.sol";
 import "./onlyExtended.sol";
 
-contract raffle is OnlyExtended {
+contract Raffle is OnlyExtended {
 
     uint private globalSeed = 0;
     uint public endTime = 7 days; //Raffle end in 7 days
-    uint public immutable SUMMMONER_ID;
     IrERC20 public candies;
     IRandomCodex public randomCodex;
     IRarity public rm;
@@ -18,14 +17,12 @@ contract raffle is OnlyExtended {
     uint[] public participants;
     address[] public winners;
     bool public rewarded;
+    mapping(uint => uint) ticketsPerSummoner;
 
     constructor(address _rm, address _candies, address _randomCodex) {
         candies = IrERC20(_candies);
         randomCodex = IRandomCodex(_randomCodex);
         rm = IRarity(_rm);
-
-        SUMMMONER_ID = rm.next_summoner();
-        rm.summon(11);
     }
 
     function _get_random(uint limit, bool withZero) internal view returns (uint) {
@@ -47,7 +44,11 @@ contract raffle is OnlyExtended {
     function _update_global_seed() internal {
         string memory _string = string(
             abi.encodePacked(
-                abi.encodePacked(msg.sender), abi.encodePacked(block.timestamp), abi.encodePacked(globalSeed), abi.encodePacked(block.difficulty), abi.encodePacked(gasleft())
+                abi.encodePacked(msg.sender), 
+                abi.encodePacked(block.timestamp), 
+                abi.encodePacked(globalSeed), 
+                abi.encodePacked(block.difficulty), 
+                abi.encodePacked(gasleft())
             )
         );
         globalSeed = uint256(keccak256(abi.encodePacked(_string)));
@@ -62,6 +63,7 @@ contract raffle is OnlyExtended {
         for (uint256 i = 0; i < tickets; i++) {
             participants.push(summoner);
         }
+        ticketsPerSummoner[summoner] += tickets;
         _update_global_seed();
     }
 
@@ -77,6 +79,10 @@ contract raffle is OnlyExtended {
         }
 
         rewarded = true;
+    }
+
+    function getTicketsPerSummoner(uint summoner) external view returns (uint) {
+        return ticketsPerSummoner[summoner];
     }
 
 }
