@@ -9,11 +9,12 @@ import "./onlyExtended.sol";
 contract Raffle is OnlyExtended {
 
     uint private globalSeed = 0;
-    uint public endTime = 7 days; //Raffle end in 7 days
+    uint public endTime;
     IrERC20 public candies;
     IRandomCodex public randomCodex;
     IRarity public rm;
 
+    // uint public immutable SUMMMONER_ID;
     uint[] public participants;
     address[] public winners;
     bool public rewarded;
@@ -23,6 +24,11 @@ contract Raffle is OnlyExtended {
         candies = IrERC20(_candies);
         randomCodex = IRandomCodex(_randomCodex);
         rm = IRarity(_rm);
+
+        // SUMMMONER_ID = rm.next_summoner();
+        // rm.summon(11);
+
+        endTime = block.timestamp + 7 days; //Raffle end in 7 days
     }
 
     function _get_random(uint limit, bool withZero) internal view returns (uint) {
@@ -83,6 +89,14 @@ contract Raffle is OnlyExtended {
 
     function getTicketsPerSummoner(uint summoner) external view returns (uint) {
         return ticketsPerSummoner[summoner];
+    }
+
+    function getWinners() external view returns (address[] memory) {
+        return winners;
+    }
+
+    function getParticipants() external view returns (uint[] memory) {
+        return participants;
     }
 
 }
