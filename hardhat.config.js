@@ -11,6 +11,11 @@ module.exports = {
       optimizer: {
         enabled: true,
         runs: 200
+      },
+      outputSelection: {
+        "*": {
+          "*": ["storageLayout"]
+        }
       }
     }
   },
@@ -18,6 +23,7 @@ module.exports = {
     hardhat: {
       forking: {
         url: 'https://rpc.ftm.tools',
+        timeout: 20000000000
       },
       chainId: 250
     },

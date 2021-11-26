@@ -8,16 +8,15 @@ import "./onlyExtended.sol";
 
 contract Raffle is OnlyExtended {
 
-    uint private globalSeed = 0;
+    uint private globalSeed = 0; //Used in `_get_random()`
     uint public endTime;
     IrERC20 public candies;
     IRandomCodex public randomCodex;
     IRarity public rm;
 
-    // uint public immutable SUMMMONER_ID;
     uint[] public participants;
     address[] public winners;
-    bool public rewarded;
+    bool public rewarded = false;
     mapping(uint => uint) ticketsPerSummoner;
 
     constructor(address _rm, address _candies, address _randomCodex) {
@@ -25,13 +24,11 @@ contract Raffle is OnlyExtended {
         randomCodex = IRandomCodex(_randomCodex);
         rm = IRarity(_rm);
 
-        // SUMMMONER_ID = rm.next_summoner();
-        // rm.summon(11);
-
         endTime = block.timestamp + 7 days; //Raffle end in 7 days
     }
 
     function _get_random(uint limit, bool withZero) internal view returns (uint) {
+        //pseudo random fn
         uint _globalSeed = globalSeed;
         _globalSeed += gasleft();
         uint result = 0;
@@ -61,6 +58,7 @@ contract Raffle is OnlyExtended {
     }
 
     function enterRaffle(uint summoner, uint amount) external {
+        //Enter raffle, burn amount
         require(block.timestamp <= endTime, "!endTime");
         require(amount != 0, "zero amount");
         require(amount % 100 == 0, "!amount"); //Can only enter raffle with multiples of 100
@@ -74,9 +72,11 @@ contract Raffle is OnlyExtended {
     }
 
     function reward(uint winnersCount) external onlyExtended {
+        //Admin execute the raffle
         require(block.timestamp >= endTime, "!endTime");
         require(!rewarded, "rewarded");
         uint[] memory _participants = participants;
+        require(winnersCount < _participants.length, "!winnersCount");
 
         for (uint256 e = 0; e < winnersCount; e++) {
             uint num = _get_random(participants.length, true);
