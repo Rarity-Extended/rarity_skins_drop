@@ -5,24 +5,31 @@ import "./interfaces/IRarity.sol";
 import "./interfaces/IrERC20.sol";
 import "./interfaces/IRandomCodex.sol";
 import "./onlyExtended.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract Raffle is OnlyExtended {
+contract Raffle is OnlyExtended, IERC721Receiver {
 
     uint private globalSeed = 0; //Used in `_get_random()`
     uint public endTime;
     IrERC20 public candies;
     IRandomCodex public randomCodex;
     IRarity public rm;
+    IERC721 Skins;
 
     uint[] public participants;
     address[] public winners;
-    bool public rewarded = false;
+    uint[] skinsIds;
     mapping(uint => uint) ticketsPerSummoner;
 
-    constructor(address _rm, address _candies, address _randomCodex) {
+    bool public rewarded = false;
+    bool public prizesLoaded = false;
+
+    constructor(address _rm, address _candies, address _randomCodex, address _skins) {
         candies = IrERC20(_candies);
         randomCodex = IRandomCodex(_randomCodex);
         rm = IRarity(_rm);
+        Skins = IERC721(_skins);
 
         endTime = block.timestamp + 7 days; //Raffle end in 7 days
     }
@@ -57,13 +64,35 @@ contract Raffle is OnlyExtended {
         globalSeed = uint256(keccak256(abi.encodePacked(_string)));
     }
 
+    function _check_if_already_won(address[] memory currentWinners, address target) internal pure returns (bool) {
+        //Return TRUE if target already won
+        for (uint256 k = 0; k < currentWinners.length; k++) {
+            address winner = currentWinners[k];
+            if (winner == target){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function loadPrizes(uint[] memory _skinsIds) external onlyExtended {
+        //Load NFTs in this contract
+        skinsIds = _skinsIds;
+
+        for (uint256 h = 0; h < _skinsIds.length; h++) {
+            Skins.safeTransferFrom(msg.sender, address(this), _skinsIds[h]);
+        }
+
+        prizesLoaded = true;
+    }
+
     function enterRaffle(uint summoner, uint amount) external {
         //Enter raffle, burn amount
         require(block.timestamp <= endTime, "!endTime");
         require(amount != 0, "zero amount");
-        require(amount % 100 == 0, "!amount"); //Can only enter raffle with multiples of 100
+        require(amount % 25 == 0, "!amount"); //Can only enter raffle with multiples of 25
         candies.burn(summoner, amount);
-        uint tickets = amount / 100;
+        uint tickets = amount / 25;
         for (uint256 i = 0; i < tickets; i++) {
             participants.push(summoner);
         }
@@ -75,16 +104,30 @@ contract Raffle is OnlyExtended {
         //Admin execute the raffle
         require(block.timestamp >= endTime, "!endTime");
         require(!rewarded, "rewarded");
+        require(prizesLoaded, "!prizes");
         uint[] memory _participants = participants;
         require(winnersCount < _participants.length, "!winnersCount");
+        require(winnersCount == skinsIds.length, "!length");
 
         for (uint256 e = 0; e < winnersCount; e++) {
             uint num = _get_random(participants.length, true);
-            address winner = rm.ownerOf(_participants[num]);
-            winners.push(winner);
+            address candidate = rm.ownerOf(_participants[num]);
+
+            if(!_check_if_already_won(winners, candidate)){ //check if already won
+                winners.push(candidate);
+            }else{
+                e--;
+            }
         }
 
+        assert(winners.length == winnersCount);
+
         rewarded = true;
+
+        //Airdrop
+        for (uint256 gm = 0; gm < winners.length; gm++) {
+            Skins.safeTransferFrom(address(this), winners[gm], skinsIds[gm]);
+        }
     }
 
     function getTicketsPerSummoner(uint summoner) external view returns (uint) {
@@ -97,6 +140,15 @@ contract Raffle is OnlyExtended {
 
     function getParticipants() external view returns (uint[] memory) {
         return participants;
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
 }
