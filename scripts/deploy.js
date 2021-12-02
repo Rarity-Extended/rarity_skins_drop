@@ -2,7 +2,9 @@ const hre = require("hardhat");
 const {
     rarityManifestedAddr,
     candiesAddr,
-    randomCodexAddr
+    randomCodexAddr,
+    skinsAddr,
+    skindsId
 } = require("../registry.json");
 
 async function main() {
@@ -10,7 +12,7 @@ async function main() {
     await hre.run("compile");
 
     const Raffle = await hre.ethers.getContractFactory("Raffle");
-    const raffle = await Raffle.deploy(rarityManifestedAddr, candiesAddr, randomCodexAddr);
+    const raffle = await Raffle.deploy(rarityManifestedAddr, candiesAddr, randomCodexAddr, skinsAddr);
     console.log("Deployed at:", raffle.address);
 
     console.log("Waiting to confirm. (Prevent verification failing)");
@@ -19,7 +21,7 @@ async function main() {
     //Verify. (Comment if making trouble)
     await hre.run("verify:verify", {
         address: raffle.address,
-        constructorArguments: [rarityManifestedAddr, candiesAddr, randomCodexAddr]
+        constructorArguments: [rarityManifestedAddr, candiesAddr, randomCodexAddr, skinsAddr]
     });
 }
 
