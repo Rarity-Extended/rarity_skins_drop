@@ -100,16 +100,15 @@ contract Raffle is OnlyExtended, IERC721Receiver {
         _update_global_seed();
     }
 
-    function reward(uint winnersCount) external onlyExtended {
+    function reward() external onlyExtended {
         //Admin execute the raffle
         require(block.timestamp >= endTime, "!endTime");
         require(!rewarded, "rewarded");
         require(prizesLoaded, "!prizes");
         uint[] memory _participants = participants;
-        require(winnersCount < _participants.length, "!winnersCount");
-        require(winnersCount == skinsIds.length, "!length");
+        require(skinsIds.length < _participants.length, "!participantsLength");
 
-        for (uint256 e = 0; e < winnersCount; e++) {
+        for (uint256 e = 0; e < skinsIds.length; e++) {
             uint num = _get_random(participants.length, true);
             address candidate = rm.ownerOf(_participants[num]);
 
@@ -119,8 +118,6 @@ contract Raffle is OnlyExtended, IERC721Receiver {
                 e--;
             }
         }
-
-        assert(winners.length == winnersCount);
 
         rewarded = true;
 
@@ -140,6 +137,25 @@ contract Raffle is OnlyExtended, IERC721Receiver {
 
     function getParticipants() external view returns (uint[] memory) {
         return participants;
+    }
+
+    function getWinningOdds(uint summoner) external view returns (uint, uint) {
+        uint tickets = ticketsPerSummoner[summoner];
+        uint totalParticipants = participants.length;
+        uint prizesCount = skinsIds.length;
+        
+        uint numerator = 0;
+        uint denominator = 0;
+
+        if(prizesCount <= totalParticipants){
+            numerator = tickets;
+            denominator = totalParticipants;
+        }else{
+            return (100, 100);
+        }
+
+        // Return odds in numerator/denominator
+        return (numerator, denominator);
     }
 
     function onERC721Received(

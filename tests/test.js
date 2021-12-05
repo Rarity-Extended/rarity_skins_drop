@@ -20,7 +20,6 @@ describe("Raffle", function () {
 
         this.candiesWhaleSigner = await ethers.getSigner(candiesWhale);
         this.candiesWhaleSummoner = 131094;
-        this.winnersCount = 11;
 
         this.rarity = new ethers.Contract(rarityManifestedAddr, [
             'function approve(address to, uint256 tokenId) external',
@@ -76,6 +75,11 @@ describe("Raffle", function () {
         expect(tickets).equal(2);
     });
 
+    it("Should print winning odds...", async function () {
+        let odds = await this.raffle.getWinningOdds(this.candiesWhaleSummoner);
+        console.log("Odds are:", ethers.utils.formatUnits(odds[0], "wei"), "in:", ethers.utils.formatUnits(odds[1], "wei"));
+    });
+
     it("Should enter raffle with many summoners...", async function () {
         this.timeout(6000000000);
         for (let q = 0; q < this.others.length; q++) {
@@ -92,15 +96,20 @@ describe("Raffle", function () {
         }
     });
 
+    it("Should print winning odds...", async function () {
+        let odds = await this.raffle.getWinningOdds(this.candiesWhaleSummoner);
+        console.log("Odds are:", ethers.utils.formatUnits(odds[0], "wei"), "in:", ethers.utils.formatUnits(odds[1], "wei"));
+    });
+
     it("Should reward...", async function () {
-        await expect(this.raffle.connect(this.anotherUser).reward(this.winnersCount)).to.be.revertedWith("!owner");
-        await expect(this.raffle.connect(this.user).reward(this.winnersCount)).to.be.revertedWith("!endTime");
+        await expect(this.raffle.connect(this.anotherUser).reward()).to.be.revertedWith("!owner");
+        await expect(this.raffle.connect(this.user).reward()).to.be.revertedWith("!endTime");
         await network.provider.send("evm_increaseTime", [604800]); //Time travel 7 days
-        await this.raffle.connect(this.user).reward(this.winnersCount);
-        await expect(this.raffle.connect(this.user).reward(this.winnersCount)).to.be.revertedWith("rewarded");
+        await this.raffle.connect(this.user).reward();
+        await expect(this.raffle.connect(this.user).reward()).to.be.revertedWith("rewarded");
 
         let winners = await this.raffle.getWinners();
-        expect(winners.length).equal(this.winnersCount);
+        expect(winners.length).equal(skindsId.length);
         // let participants = await this.raffle.getParticipants();
         // console.log(winners);
         // console.log(participants);
