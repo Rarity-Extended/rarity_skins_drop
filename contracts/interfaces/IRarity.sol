@@ -9,4 +9,10 @@ interface IRarity {
     function isApprovedForAll(address owner, address operator) external view returns (bool);
     function next_summoner() external view returns (uint);
     function summon(uint _class) external;
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 }

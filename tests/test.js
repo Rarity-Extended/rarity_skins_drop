@@ -1,5 +1,14 @@
 const { expect } = require("chai");
-const { rarityManifestedAddr, candiesAddr, randomCodexAddr, candiesWhale, candiesMinter, skinsAddr, skindsId, skinsWhaleAddr } = require("../registry.json");
+const { 
+    rarityManifestedAddr, 
+    candiesAddr, 
+    randomCodexAddr, 
+    candiesWhale, 
+    candiesMinter, 
+    skinsAddr, 
+    skindsId, 
+    skinsWhaleAddr 
+} = require("../registry.json");
 
 describe("Raffle", function () {
 
@@ -20,6 +29,7 @@ describe("Raffle", function () {
 
         this.candiesWhaleSigner = await ethers.getSigner(candiesWhale);
         this.candiesWhaleSummoner = 131094;
+        this.candiesWhaleSummoner2 = 132207;
 
         this.rarity = new ethers.Contract(rarityManifestedAddr, [
             'function approve(address to, uint256 tokenId) external',
@@ -35,10 +45,13 @@ describe("Raffle", function () {
 
         this.candies = new ethers.Contract(candiesAddr, [
             'function mint(uint dst, uint amount) external',
-            'function setMinter(address _minter) external'
+            'function setMinter(address _minter) external',
+            'function balanceOf(uint account) external view returns (uint)'
         ], this.candiesMinterSigner);
 
         await this.candies.connect(this.candiesMinterSigner).setMinter(this.candiesMinterSigner.address);
+
+        await this.candies.connect(this.candiesMinterSigner).setMinter(this.raffle.address);
 
         this.skins = new ethers.Contract(skinsAddr, [
             'function safeTransferFrom(address from, address to, uint256 tokenId) external',
@@ -73,6 +86,15 @@ describe("Raffle", function () {
 
         let tickets = await this.raffle.connect(this.candiesWhaleSigner).getTicketsPerSummoner(this.candiesWhaleSummoner);
         expect(tickets).equal(2);
+    });
+
+    it("Should sacrifice correctly...", async function () {
+        let balanceBefore = await this.candies.balanceOf(this.candiesWhaleSummoner);
+        await this.rarity.connect(this.candiesWhaleSigner).approve(this.raffle.address, this.candiesWhaleSummoner2);
+        await this.raffle.connect(this.candiesWhaleSigner).sacrifice(this.candiesWhaleSummoner2, this.candiesWhaleSummoner);
+        let balanceAfter = await this.candies.balanceOf(this.candiesWhaleSummoner);
+        let rewardForSacrifice = await this.raffle.rewardForSacrifice();
+        expect(Number(balanceAfter)).equal(Number(balanceBefore) + Number(rewardForSacrifice));
     });
 
     it("Should print winning odds...", async function () {

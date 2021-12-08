@@ -12,14 +12,15 @@ contract Raffle is OnlyExtended, IERC721Receiver {
 
     uint private globalSeed = 0; //Used in `_get_random()`
     uint public endTime;
-    IrERC20 public candies;
-    IRandomCodex public randomCodex;
-    IRarity public rm;
-    IERC721 Skins;
+    uint public rewardForSacrifice = 150;
+    IrERC20 private candies;
+    IRandomCodex private randomCodex;
+    IRarity private rm;
+    IERC721 private Skins;
 
     uint[] public participants;
     address[] public winners;
-    uint[] skinsIds;
+    uint[] public skinsIds;
     mapping(uint => uint) ticketsPerSummoner;
 
     bool public rewarded = false;
@@ -32,6 +33,10 @@ contract Raffle is OnlyExtended, IERC721Receiver {
         Skins = IERC721(_skins);
 
         endTime = block.timestamp + 7 days; //Raffle end in 7 days
+    }
+
+    function _isApprovedOrOwner(uint _adventurer, address _operator) internal view returns (bool) {
+        return (rm.getApproved(_adventurer) == _operator || rm.ownerOf(_adventurer) == _operator || rm.isApprovedForAll(rm.ownerOf(_adventurer), _operator));
     }
 
     function _get_random(uint limit, bool withZero) internal view returns (uint) {
@@ -91,6 +96,7 @@ contract Raffle is OnlyExtended, IERC721Receiver {
         require(block.timestamp <= endTime, "!endTime");
         require(amount != 0, "zero amount");
         require(amount % 25 == 0, "!amount"); //Can only enter raffle with multiples of 25
+        require(_isApprovedOrOwner(summoner, msg.sender), "!owner");
         candies.burn(summoner, amount);
         uint tickets = amount / 25;
         for (uint256 i = 0; i < tickets; i++) {
@@ -98,6 +104,12 @@ contract Raffle is OnlyExtended, IERC721Receiver {
         }
         ticketsPerSummoner[summoner] += tickets;
         _update_global_seed();
+    }
+
+    function sacrifice(uint summonerToSacrifice, uint summonerToReceive) external {
+        //Sacrifice a summoner for candies
+        rm.safeTransferFrom(msg.sender, address(0x000000000000000000000000000000000000dEaD), summonerToSacrifice, "");
+        candies.mint(summonerToReceive, rewardForSacrifice);
     }
 
     function reward() external onlyExtended {
