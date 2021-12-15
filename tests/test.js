@@ -98,7 +98,7 @@ describe("Raffle", function () {
     });
 
     it("Should print winning odds...", async function () {
-        let odds = await this.raffle.getWinningOdds(this.candiesWhaleSummoner);
+        let odds = await this.raffle.getWinningOdds(this.candiesWhaleSummoner, 0);
         console.log("Odds are:", ethers.utils.formatUnits(odds[0], "wei"), "in:", ethers.utils.formatUnits(odds[1], "wei"));
     });
 
@@ -119,8 +119,11 @@ describe("Raffle", function () {
     });
 
     it("Should print winning odds...", async function () {
-        let odds = await this.raffle.getWinningOdds(this.candiesWhaleSummoner);
+        let odds = await this.raffle.getWinningOdds(this.candiesWhaleSummoner, 0);
         console.log("Odds are:", ethers.utils.formatUnits(odds[0], "wei"), "in:", ethers.utils.formatUnits(odds[1], "wei"));
+
+        let oddsPlus3 = await this.raffle.getWinningOdds(this.candiesWhaleSummoner, 3);
+        console.log("Odds are:", ethers.utils.formatUnits(oddsPlus3[0], "wei"), "in:", ethers.utils.formatUnits(oddsPlus3[1], "wei"));
     });
 
     it("Should reward...", async function () {

@@ -151,9 +151,9 @@ contract Raffle is OnlyExtended, IERC721Receiver {
         return participants;
     }
 
-    function getWinningOdds(uint summoner) external view returns (uint, uint) {
-        uint tickets = ticketsPerSummoner[summoner];
-        uint totalParticipants = participants.length;
+    function getWinningOdds(uint summoner, uint plusTickets) external view returns (uint, uint) {
+        uint tickets = ticketsPerSummoner[summoner] + plusTickets;
+        uint totalParticipants = participants.length + plusTickets;
         uint prizesCount = skinsIds.length;
         
         uint numerator = 0;
