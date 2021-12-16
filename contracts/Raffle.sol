@@ -108,6 +108,7 @@ contract Raffle is OnlyExtended, IERC721Receiver {
 
     function sacrifice(uint summonerToSacrifice, uint summonerToReceive) external {
         //Sacrifice a summoner for candies
+        require(rm.level(summonerToSacrifice) >= 4, "!level");
         rm.safeTransferFrom(msg.sender, address(0x000000000000000000000000000000000000dEaD), summonerToSacrifice, "");
         candies.mint(summonerToReceive, rewardForSacrifice);
     }
