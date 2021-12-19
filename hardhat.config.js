@@ -29,8 +29,7 @@ module.exports = {
     },
     localhost: {
       url: "http://localhost:8545",
-      timeout: 2000000000,
-      accounts: [PRIVATE_KEY, ANOTHER_PRIVATE_KEY]
+      timeout: 2000000000
     },
     fantom: {
       chainId: 250,
