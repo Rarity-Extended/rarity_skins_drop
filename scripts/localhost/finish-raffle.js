@@ -9,6 +9,16 @@ async function main() {
 
   // from: https://github.com/nomiclabs/hardhat/issues/1226#issuecomment-924352129
   const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+
+  // need gas money?
+  console.log('send gas money to', skinsWhaleAddr)
+  const gas_money_params = [{
+    from: (await ethers.getSigners())[0].address,
+    to: skinsWhaleAddr,
+    value: ethers.utils.parseUnits('1000', 'ether').toHexString()
+  }]
+  await provider.send('eth_sendTransaction', gas_money_params)
+
   await provider.send("hardhat_impersonateAccount", [skinsWhaleAddr]);
   const deployer = provider.getSigner(skinsWhaleAddr);
 

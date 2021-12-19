@@ -13,7 +13,7 @@ async function main() {
   const CANDIES_PER_TICKET = 25
   const raffle_address = '0xD86CBAA11F7Da4dbB2444d28c027cfa7752258d6'
   const player_address = '0x5cdAecc1A78A3b08d186E3f02E9f05c1bb92A59B'
-  const player_summoners = ['243053', '417735', '418316', '729116', '1322846', '1971427', '1972230', '1972873', '1974478', '1975325', '1975880', '1980423', '1981617', '1981813', '1999657', '2001497', '2643674']
+  const player_summoners = ['243053', '417735', '418316', '729116', '1322846', '1971427']
 
   // from: https://github.com/nomiclabs/hardhat/issues/1226#issuecomment-924352129
   const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545")
