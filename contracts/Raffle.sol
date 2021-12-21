@@ -108,6 +108,7 @@ contract Raffle is OnlyExtended, IERC721Receiver {
 
     function sacrifice(uint summonerToSacrifice, uint summonerToReceive) external {
         //Sacrifice a summoner for candies
+        require(block.timestamp <= endTime, "!endTime");
         require(rm.level(summonerToSacrifice) >= 4, "!level");
         rm.safeTransferFrom(msg.sender, address(0x000000000000000000000000000000000000dEaD), summonerToSacrifice, "");
         candies.mint(summonerToReceive, rewardForSacrifice);
@@ -160,7 +161,7 @@ contract Raffle is OnlyExtended, IERC721Receiver {
         uint numerator = 0;
         uint denominator = 0;
 
-        if(prizesCount <= totalParticipants){
+        if(prizesCount <= totalParticipants && totalParticipants > 0){
             numerator = tickets;
             denominator = totalParticipants;
         }else{
